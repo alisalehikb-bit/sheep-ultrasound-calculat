@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#176b55">
+<title>چند بره بیشتر؟ | محاسبه‌گر سونوگرافی گوسفند</title>
+<style>
+:root{--green:#176b55;--deep:#104b3d;--mint:#e8f5ee;--cream:#fffaf0;--ink:#18332c;--muted:#61736d;--line:#d9e6df;--orange:#f2a65a}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#eaf6ef 0,#f7faf7 300px,#f7faf7 100%);font-family:Tahoma,Arial,sans-serif;color:var(--ink);line-height:1.8}
+main{max-width:680px;margin:auto;padding:18px 14px 36px}
+.hero{background:var(--green);color:white;border-radius:24px;padding:23px 20px 21px;position:relative;overflow:hidden;box-shadow:0 12px 30px #176b5522}
+.hero:after{content:"🐑";position:absolute;left:12px;bottom:-24px;font-size:100px;opacity:.14;transform:rotate(-8deg)}
+.kicker{font-size:12px;letter-spacing:.3px;opacity:.85}
+h1{font-size:27px;line-height:1.45;margin:5px 0 8px}
+.hero p{margin:0;max-width:470px;font-size:14px;opacity:.95}
+.card{background:white;border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:14px;box-shadow:0 5px 18px #173e2c08}
+h2{font-size:17px;margin:0 0 12px}
+.field{margin:13px 0}
+label{display:block;font-weight:bold;font-size:14px;margin-bottom:5px}
+.help{font-size:12px;color:var(--muted);margin-top:4px}
+input{width:100%;font:inherit;font-size:16px;padding:12px 13px;border:1px solid #c8d9d0;border-radius:12px;background:#fcfefc;color:var(--ink);outline:none}
+input:focus{border-color:var(--green);box-shadow:0 0 0 3px #176b5518}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{width:100%;border:0;border-radius:14px;background:var(--orange);color:#3f2812;font:inherit;font-size:17px;font-weight:bold;padding:13px;margin-top:8px;cursor:pointer;box-shadow:0 5px 0 #d88a3d}
+button:active{transform:translateY(2px);box-shadow:0 3px 0 #d88a3d}
+.result{background:var(--deep);color:white;border-radius:20px;padding:19px;margin-top:15px;text-align:center}
+.result .small{font-size:13px;opacity:.85}
+.big{font-size:48px;font-weight:900;line-height:1.25;margin:3px 0}
+.result .unit{font-size:17px;font-weight:bold}
+.result .date{font-size:13px;opacity:.88;margin-top:7px}
+.breakdown{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.metric{background:var(--mint);border-radius:13px;padding:10px;text-align:center}
+.metric strong{display:block;font-size:21px;color:var(--green)}
+.metric span{font-size:12px;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin:12px 2px 0}
+.assumptions{font-size:13px;padding-right:18px;margin:8px 0 0}
+.assumptions li{margin:3px 0}
+.footer{text-align:center;color:var(--muted);font-size:11px;margin-top:17px}
+@media(max-width:420px){h1{font-size:24px}.row{grid-template-columns:1fr}.big{font-size:42px}.card{padding:15px}}
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="kicker">محاسبه‌گر ساده برای گله شما</div>
+    <h1>سونوگرافی امروز، بره‌های بیشتر سال آینده؟</h1>
+    <p>اطلاعات گله را وارد کنید تا تخمین بزنید اگر میش‌های قَسَر شناسایی و به‌موقع دوباره قوچ‌اندازی شوند، تا تاریخ قوچ‌اندازی سال آینده چند بره اضافه خواهید داشت.</p>
+  </header>
+
+  <section class="card">
+    <h2>۱. اطلاعات گله</h2>
+    <div class="field">
+      <label for="ewes">تعداد کل میش‌ها</label>
+      <input id="ewes" type="text" inputmode="numeric" value="1000" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="pregnant">تعداد میش‌های آبستن</label>
+      <input id="pregnant" type="text" inputmode="numeric" placeholder="اگر نمی‌دانید، خالی بگذارید" autocomplete="off">
+      <div class="help">اگر تعداد آبستن‌ها را نمی‌دانید، برنامه به‌طور پیش‌فرض ۹۰٪ گله را آبستن فرض می‌کند.</div>
+    </div>
+    <div class="field">
+      <label for="ramdate">تاریخ شروع قوچ‌اندازی</label>
+      <input id="ramdate" type="text" inputmode="numeric" placeholder="مثلاً ۱۴۰۵/۰۷/۲۰" autocomplete="off" aria-label="تاریخ شمسی شروع قوچ‌اندازی">
+      <div class="help">تاریخ را شمسی وارد کنید؛ مثلاً ۱۴۰۵/۰۷/۲۰. همین تاریخ در سال آینده مبنای مقایسه است.</div>
+    </div>
+    <button id="calculate" type="button">محاسبه بره‌های اضافه</button>
+  </section>
+
+  <section class="result" aria-live="polite">
+    <div class="small">برآورد بره‌های زنده اضافه تا تاریخ مبنا در سال آینده</div>
+    <div class="big" id="extra">۱۱۱</div>
+    <div class="unit">بره بیشتر 🐑</div>
+    <div class="date" id="targetdate">تا تاریخ شروع قوچ‌اندازی سال آینده</div>
+  </section>
+
+  <section class="card">
+    <h2>۲. این عدد چطور به دست آمد؟</h2>
+    <div class="breakdown">
+      <div class="metric"><strong id="barren">۱۵۰</strong><span>میش قَسَرِ برآوردشده</span></div>
+      <div class="metric"><strong id="rebred">۱۰۵</strong><span>میش قَسَر که دوباره آبستن می‌شوند</span></div>
+      <div class="metric"><strong id="lambs">۱۲۳</strong><span>بره متولدشده (برآورد)</span></div>
+      <div class="metric"><strong id="survivors">۱۱۱</strong><span>بره زنده‌مانده (برآورد)</span></div>
+    </div>
+    <p class="note">این محاسبه آموزشی است؛ نتیجه واقعی به زمان سونوگرافی، امکان قوچ‌اندازی مجدد، باروری قوچ و میش، دوقلوزایی و تلفات بره بستگی دارد.</p>
+  </section>
+
+  <section class="card">
+    <h2>فرض‌های ثابت محاسبه</h2>
+    <ul class="assumptions">
+      <li>۷۰٪ از میش‌های قَسَر شناسایی‌شده، با مدیریت مناسب دوباره آبستن می‌شوند.</li>
+      <li>۹۰٪ از میش‌های دوباره آبستن‌شده بره‌زایی می‌کنند.</li>
+      <li>به‌طور متوسط ۱٫۳ بره به ازای هر میش بره‌زا در نظر گرفته شده است.</li>
+      <li>۹۰٪ بره‌های متولدشده تا زمان محاسبه زنده می‌مانند.</li>
+    </ul>
+    <p class="note"><strong>نکته مهم:</strong> برنامه فرض می‌کند میش‌های قَسَر به‌موقع دوباره قوچ‌اندازی شوند و بره‌های حاصل تا تاریخ مقایسه متولد شده باشند. اگر این شرط برقرار نباشد، تعداد بره اضافه کمتر خواهد بود.</p>
+  </section>
+  <div class="footer">نسخه آزمایشی • بدون ثبت‌نام و بدون ارسال اطلاعات گله به جایی</div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+function latinDigits(s){
+  return String(s).replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
+                  .replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+                  .replace(/[٬،]/g, "").replace(/,/g, "").trim();
+}
+function fmt(n){return Math.round(n).toLocaleString('fa-IR');}
+function dateFa(s){
+  if(!s) return "تا تاریخ شروع قوچ‌اندازی سال آینده";
+  const digits = latinDigits(s).replace(/[.\-]/g,"/").replace(/\s+/g,"");
+  const m = digits.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+  if(!m) return "تاریخ را به‌شکل سال/ماه/روز شمسی وارد کنید؛ مثلاً ۱۴۰۵/۰۷/۲۰";
+  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+  if(mo < 1 || mo > 12 || d < 1 || d > (mo <= 6 ? 31 : mo <= 11 ? 30 : 30))
+    return "لطفاً یک تاریخ شمسی معتبر وارد کنید.";
+  const next = String(y+1).padStart(4,"0")+"/"+String(mo).padStart(2,"0")+"/"+String(d).padStart(2,"0");
+  return "تا "+next.replace(/\d/g, x => "۰۱۲۳۴۵۶۷۸۹"[Number(x)])+" (همین تاریخ شمسی در سال آینده)";
+}
+function calculate(){
+  const total = Math.max(0, Number(latinDigits($("ewes").value)) || 0);
+  const pregText = latinDigits($("pregnant").value);
+  const known = pregText !== "" && Number.isFinite(Number(pregText));
+  let pregnant = known ? Number(pregText) : total * 0.90;
+  pregnant = Math.min(total, Math.max(0, pregnant));
+  const barren = Math.max(0,total-pregnant);
+  const rebred = barren*0.70;
+  const lambingEwes = rebred*0.90;
+  const born = lambingEwes*1.30;
+  const survivors = born*0.90;
+  $("barren").textContent=fmt(barren);
+  $("rebred").textContent=fmt(rebred);
+  $("lambs").textContent=fmt(born);
+  $("survivors").textContent=fmt(survivors);
+  $("extra").textContent=fmt(survivors);
+  $("targetdate").textContent=dateFa($("ramdate").value);
+}
+$("calculate").addEventListener("click",calculate);
+["ewes","pregnant","ramdate"].forEach(id => $(id).addEventListener("input",calculate));
+(function init(){
+  // Keep the date empty until the user enters their own flock's ram-introduction date.
+  calculate();
+})();
+</script>
+</body>
+</html>
