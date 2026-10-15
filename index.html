@@ -47,7 +47,7 @@ button:active{transform:translateY(2px);box-shadow:0 3px 0 #d88a3d}
   <header class="hero">
     <div class="kicker">محاسبه‌گر ساده برای گله شما</div>
     <h1>سونوگرافی امروز، بره‌های بیشتر سال آینده؟</h1>
-    <p>اطلاعات گله را وارد کنید تا تخمین بزنید اگر میش‌های قَسَر شناسایی و به‌موقع دوباره قوچ‌اندازی شوند، تا تاریخ قوچ‌اندازی سال آینده چند بره اضافه خواهید داشت.</p>
+    <p>اطلاعات گله را وارد کنید تا تخمین بزنید اگر میش‌های قسر شناسایی و به‌موقع دوباره قوچ‌اندازی شوند، تا تاریخ قوچ‌اندازی سال آینده چند بره اضافه خواهید داشت.</p>
   </header>
 
   <section class="card">
@@ -91,7 +91,7 @@ button:active{transform:translateY(2px);box-shadow:0 3px 0 #d88a3d}
     <h2>فرض‌های ثابت محاسبه</h2>
     <ul class="assumptions">
       <li>۷۰٪ از میش‌های قَسَر شناسایی‌شده، با مدیریت مناسب دوباره آبستن می‌شوند.</li>
-      <li>۹۰٪ از میش‌های دوباره آبستن‌شده بره‌زایی می‌کنند.</li>
+      <li>۹۰٪با در نظر گرفتن احتمال سقط و بره‌اندازی، ۹۰٪ از میش‌های دوباره آبستن‌شده به زایش می‌رسند.</li>
       <li>به‌طور متوسط ۱٫۳ بره به ازای هر میش بره‌زا در نظر گرفته شده است.</li>
       <li>۹۰٪ بره‌های متولدشده تا زمان محاسبه زنده می‌مانند.</li>
     </ul>
@@ -122,7 +122,7 @@ function calculate(){
   const total = Math.max(0, Number(latinDigits($("ewes").value)) || 0);
   const pregText = latinDigits($("pregnant").value);
   const known = pregText !== "" && Number.isFinite(Number(pregText));
-  let pregnant = known ? Number(pregText) : total * 0.90;
+  let pregnant = known ? Number(pregText) : total * 0.80;
   pregnant = Math.min(total, Math.max(0, pregnant));
   const barren = Math.max(0,total-pregnant);
   const rebred = barren*0.70;
