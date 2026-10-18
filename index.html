@@ -22,6 +22,21 @@ h2{font-size:17px;margin:0 0 12px}
 label{display:block;font-weight:bold;font-size:14px;margin-bottom:5px}
 .help{font-size:12px;color:var(--muted);margin-top:4px}
 input{width:100%;font:inherit;font-size:16px;padding:12px 13px;border:1px solid #c8d9d0;border-radius:12px;background:#fcfefc;color:var(--ink);outline:none}
+.date-wrap{position:relative}
+.date-input-row{display:flex;gap:8px;align-items:stretch}
+.date-input-row input{min-width:0;cursor:pointer}
+.calendar-toggle{width:auto;min-width:54px;margin:0;padding:8px 14px;background:var(--mint);color:var(--green);box-shadow:none;border:1px solid #c8d9d0;font-size:22px}
+.jalali-calendar{display:none;position:absolute;z-index:20;top:calc(100% + 8px);right:0;width:min(100%,360px);background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:0 12px 32px #173e2c22}
+.jalali-calendar.open{display:block}
+.calendar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.calendar-head button{width:42px;min-width:42px;margin:0;padding:5px;background:var(--mint);color:var(--green);box-shadow:none;font-size:20px}
+.calendar-title{font-weight:bold;text-align:center;flex:1}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.calendar-weekday{font-size:12px;color:var(--muted);padding:5px 0}
+.calendar-day{margin:0!important;padding:8px 0!important;box-shadow:none!important;border-radius:9px!important;background:#f5f9f6!important;color:var(--ink)!important;font-size:14px!important}
+.calendar-day:hover,.calendar-day.selected{background:var(--green)!important;color:white!important}
+.calendar-day.today{outline:1px solid var(--green)}
+.calendar-empty{min-height:38px}
 input:focus{border-color:var(--green);box-shadow:0 0 0 3px #176b5518}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 button{width:100%;border:0;border-radius:14px;background:var(--orange);color:#3f2812;font:inherit;font-size:17px;font-weight:bold;padding:13px;margin-top:8px;cursor:pointer;box-shadow:0 5px 0 #d88a3d}
@@ -63,8 +78,21 @@ button:active{transform:translateY(2px);box-shadow:0 3px 0 #d88a3d}
     </div>
     <div class="field">
       <label for="ramdate">تاریخ شروع قوچ‌اندازی</label>
-      <input id="ramdate" type="text" inputmode="numeric" placeholder="مثلاً ۱۴۰۵/۰۷/۲۰" autocomplete="off" aria-label="تاریخ شمسی شروع قوچ‌اندازی">
-      <div class="help">تاریخ را شمسی وارد کنید؛ مثلاً ۱۴۰۵/۰۷/۲۰. همین تاریخ در سال آینده مبنای مقایسه است.</div>
+      <div class="date-wrap" id="dateWrap">
+        <div class="date-input-row">
+          <input id="ramdate" type="text" placeholder="برای انتخاب تاریخ بزنید" autocomplete="off" aria-label="تاریخ شمسی شروع قوچ‌اندازی" readonly aria-haspopup="dialog" aria-expanded="false">
+          <button type="button" class="calendar-toggle" id="calendarToggle" aria-label="باز کردن تقویم شمسی">▦</button>
+        </div>
+        <div class="jalali-calendar" id="jalaliCalendar" role="dialog" aria-label="تقویم شمسی">
+          <div class="calendar-head">
+            <button type="button" id="prevMonth" aria-label="ماه قبل">‹</button>
+            <div class="calendar-title" id="calendarTitle"></div>
+            <button type="button" id="nextMonth" aria-label="ماه بعد">›</button>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+      </div>
+      <div class="help">برای انتخاب تاریخ شمسی، روی کادر یا علامت تقویم بزنید. همین تاریخ در سال آینده مبنای مقایسه است.</div>
     </div>
     <button id="calculate" type="button">محاسبه بره‌های اضافه</button>
   </section>
@@ -107,16 +135,59 @@ function latinDigits(s){
                   .replace(/[٬،]/g, "").replace(/,/g, "").trim();
 }
 function fmt(n){return Math.round(n).toLocaleString('fa-IR');}
+const jalaliMonths = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+const weekdays = ["ش","ی","د","س","چ","پ","ج"];
+function jalCal(jy) {
+  const breaks = [-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178];
+  const bl = breaks.length; let gy = jy + 621, leapJ = -14, jp = breaks[0], jm, jump, n, i;
+  if (jy < jp || jy >= breaks[bl-1]) return {gy, leap:0, march:20};
+  for (i=1;i<bl;i++) { jm=breaks[i]; jump=jm-jp; if (jy<jm) break; leapJ += Math.floor(jump/33)*8 + Math.floor((jump%33)/4); jp=jm; }
+  n=jy-jp; leapJ += Math.floor(n/33)*8 + Math.floor(((n%33)+3)/4);
+  if (jump%33===4 && jump-n===4) leapJ++;
+  const leapG = Math.floor(gy/4)-Math.floor((Math.floor(gy/100)+1)*3/4)-150;
+  const march = 20 + leapJ - leapG;
+  if (jump-n < 6) n=n-jump+Math.floor((jump+4)/33)*33;
+  let leap = (((n+1)%33)-1)%4; if (leap===-1) leap=4;
+  return {gy, leap, march};
+}
+function jalaliToGregorian(jy,jm,jd){
+  const r=jalCal(jy); const gy=r.gy; const march=r.march;
+  const jdn = gregorianToJdn(gy,3,march) + (jm-1)*31 - Math.floor((jm-1)/7)*(jm-7) + jd-1;
+  return jdnToGregorian(jdn);
+}
+function gregorianToJdn(y,m,d){const a=Math.floor((14-m)/12), yy=y+4800-a, mm=m+12*a-3;return d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;}
+function jdnToGregorian(jdn){let a=jdn+32044,b=Math.floor((4*a+3)/146097),c=a-Math.floor(146097*b/4),d=Math.floor((4*c+3)/1461),e=c-Math.floor(1461*d/4),m=Math.floor((5*e+2)/153);return {gy:100*b+d-4800+Math.floor(m/10),gm:m+3-12*Math.floor(m/10),gd:e-Math.floor((153*m+2)/5)+1};}
+function jalaliMonthLength(y,m){if(m<=6)return 31;if(m<=11)return 30;return jalCal(y).leap===0?29:30;}
+function currentJalali(){const parts=new Intl.DateTimeFormat('en-u-ca-persian-nu-latn',{year:'numeric',month:'numeric',day:'numeric'}).formatToParts(new Date());const o={};parts.forEach(p=>{if(p.type!=='literal')o[p.type]=Number(p.value)});return {y:o.year,m:o.month,d:o.day};}
+function faDigits(s){return String(s).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[Number(d)]);}
+let viewDate=currentJalali();
+function parseJalaliInput(s){const m=String(s||'').match(/^(\d{4})\/(\d{2})\/(\d{2})$/);return m?{y:+m[1],m:+m[2],d:+m[3]}:null;}
+function renderCalendar(){
+  $('calendarTitle').textContent=jalaliMonths[viewDate.m-1]+' '+faDigits(viewDate.y);
+  const grid=$('calendarGrid'); grid.innerHTML='';
+  weekdays.forEach(w=>{const el=document.createElement('div');el.className='calendar-weekday';el.textContent=w;grid.appendChild(el)});
+  const first=jalaliToGregorian(viewDate.y,viewDate.m,1); const offset=(new Date(first.gy,first.gm-1,first.gd).getDay()+1)%7;
+  for(let i=0;i<offset;i++){const el=document.createElement('div');el.className='calendar-empty';grid.appendChild(el)}
+  const selected=parseJalaliInput($('ramdate').value); const today=currentJalali();
+  for(let d=1;d<=jalaliMonthLength(viewDate.y,viewDate.m);d++){
+    const el=document.createElement('button');el.type='button';el.className='calendar-day';el.textContent=faDigits(d);
+    if(selected&&selected.y===viewDate.y&&selected.m===viewDate.m&&selected.d===d)el.classList.add('selected');
+    if(today.y===viewDate.y&&today.m===viewDate.m&&today.d===d)el.classList.add('today');
+    el.addEventListener('click',()=>{ $('ramdate').value=faDigits(viewDate.y)+'/'+faDigits(String(viewDate.m).padStart(2,'0'))+'/'+faDigits(String(d).padStart(2,'0')); closeCalendar(); calculate(); });
+    grid.appendChild(el);
+  }
+}
+function openCalendar(){const chosen=parseJalaliInput(latinDigits($('ramdate').value).replace(/\s/g,''));viewDate=chosen?{y:chosen.y,m:chosen.m,d:chosen.d}:currentJalali();renderCalendar();$('jalaliCalendar').classList.add('open');$('ramdate').setAttribute('aria-expanded','true');}
+function closeCalendar(){$('jalaliCalendar').classList.remove('open');$('ramdate').setAttribute('aria-expanded','false');}
 function dateFa(s){
   if(!s) return "تا تاریخ شروع قوچ‌اندازی سال آینده";
-  const digits = latinDigits(s).replace(/[.\-]/g,"/").replace(/\s+/g,"");
-  const m = digits.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
-  if(!m) return "تاریخ را به‌شکل سال/ماه/روز شمسی وارد کنید؛ مثلاً ۱۴۰۵/۰۷/۲۰";
-  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
-  if(mo < 1 || mo > 12 || d < 1 || d > (mo <= 6 ? 31 : mo <= 11 ? 30 : 30))
-    return "لطفاً یک تاریخ شمسی معتبر وارد کنید.";
-  const next = String(y+1).padStart(4,"0")+"/"+String(mo).padStart(2,"0")+"/"+String(d).padStart(2,"0");
-  return "تا "+next.replace(/\d/g, x => "۰۱۲۳۴۵۶۷۸۹"[Number(x)])+" (همین تاریخ شمسی در سال آینده)";
+  const digits=latinDigits(s).replace(/[.\-]/g,"/").replace(/\s+/g,"");
+  const m=digits.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+  if(!m)return "تاریخ شروع قوچ‌اندازی را از تقویم انتخاب کنید.";
+  const y=Number(m[1]),mo=Number(m[2]),d=Number(m[3]);
+  if(mo<1||mo>12||d<1||d>jalaliMonthLength(y,mo))return "لطفاً یک تاریخ شمسی معتبر انتخاب کنید.";
+  const next=String(y+1).padStart(4,"0")+"/"+String(mo).padStart(2,"0")+"/"+String(d).padStart(2,"0");
+  return "تا "+next.replace(/\d/g,x=>"۰۱۲۳۴۵۶۷۸۹"[Number(x)])+" (همین تاریخ شمسی در سال آینده)";
 }
 function calculate(){
   const total = Math.max(0, Number(latinDigits($("ewes").value)) || 0);
@@ -137,7 +208,12 @@ function calculate(){
   $("targetdate").textContent=dateFa($("ramdate").value);
 }
 $("calculate").addEventListener("click",calculate);
-["ewes","pregnant","ramdate"].forEach(id => $(id).addEventListener("input",calculate));
+["ewes","pregnant"].forEach(id => $(id).addEventListener("input",calculate));
+["ramdate","calendarToggle"].forEach(id => $(id).addEventListener("click",()=>{if($("jalaliCalendar").classList.contains("open"))closeCalendar();else openCalendar();}));
+$("prevMonth").addEventListener("click",()=>{viewDate.m--;if(viewDate.m<1){viewDate.m=12;viewDate.y--;}renderCalendar();});
+$("nextMonth").addEventListener("click",()=>{viewDate.m++;if(viewDate.m>12){viewDate.m=1;viewDate.y++;}renderCalendar();});
+document.addEventListener("click",e=>{if(!$("dateWrap").contains(e.target))closeCalendar();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeCalendar();});
 (function init(){
   // Keep the date empty until the user enters their own flock's ram-introduction date.
   calculate();
